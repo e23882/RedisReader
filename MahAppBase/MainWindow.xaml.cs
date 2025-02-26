@@ -26,7 +26,6 @@ namespace MahAppBase
             ViewModel = App.Container.Resolve<MainComponent>();
             this.DataContext = ViewModel;
             element.ToggleAutoHide();
-            element1.ToggleAutoHide();
         }
         #endregion
     }
