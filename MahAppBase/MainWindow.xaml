@@ -6,12 +6,14 @@
     xmlns:behaviors="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
     xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dgx="urn:tom-englert.de/DataGridExtensions"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:local="clr-namespace:MahAppBase"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title=""
-    Width="1200"
+    x:Name="window"
+    Title="{Binding ConnectionInfo}"
+    Width="700"
     Height="650"
     mc:Ignorable="d">
     <i:Interaction.Triggers>
@@ -19,6 +21,9 @@
             <behaviors:InvokeCommandAction Command="{Binding ClosedWindowCommand}" />
         </behaviors:EventTrigger>
     </i:Interaction.Triggers>
+    <controls:MetroWindow.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding OpenOrCloseSettingCommand}" />
+    </controls:MetroWindow.InputBindings>
     <controls:MetroWindow.Flyouts>
         <controls:FlyoutsControl>
             <controls:Flyout
@@ -32,14 +37,52 @@
                 </StackPanel>
             </controls:Flyout>
             <controls:Flyout
-                Width="400"
+                Width="450"
                 Header="Setting"
                 IsOpen="{Binding SettingIsOpen}"
                 Position="Left"
                 Theme="Light">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Put setting component here" />
-                </StackPanel>
+                <Grid>
+                    <DataGrid
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding FavoriteConnectionList, Mode=OneWay}"
+                        SelectedItem="{Binding SelectedConnection}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Binding="{Binding ConnectionName}"
+                                Header="連線"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Binding="{Binding Host}"
+                                Header="IP"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Binding="{Binding Port}"
+                                Header="Port"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Binding="{Binding Password}"
+                                Header="密碼"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Binding="{Binding DefaultDB}"
+                                Header="DB"
+                                IsReadOnly="True" />
+                            <DataGridTemplateColumn Header=" ">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Padding="10,5"
+                                            Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.ChooseConnectionCommand}"
+                                            Content="選擇" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </controls:Flyout>
         </controls:FlyoutsControl>
     </controls:MetroWindow.Flyouts>
@@ -68,7 +111,6 @@
             <avalondock:LayoutPanel DockHeight="150">
                 <avalondock:LayoutAnchorablePane>
                     <avalondock:LayoutAnchorable
-                        Title="功能"
                         AutoHideWidth="240"
                         CanAutoHide="False"
                         CanClose="False"
@@ -136,7 +178,16 @@
                                 <Button
                                     Margin="10,0,0,0"
                                     Command="{Binding ConnectCommand}"
-                                    Content="Connect" />
+                                    Content="Connect"
+                                    IsEnabled="{Binding UnlockingUI}" />
+                                <Button Margin="5,0,0,0" Command="{Binding CreateNewInstanceCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <iconPacks:PackIconModern
+                                            Width="24"
+                                            Height="24"
+                                            Kind="MonitorAdd" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </avalondock:LayoutAnchorable>
@@ -157,27 +208,32 @@
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="30" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="2*" />
                                     <ColumnDefinition Width="4*" />
                                 </Grid.ColumnDefinitions>
+                                <TextBlock Margin="5,5,0,5" Text="{Binding ConnectionInfo}" />
                                 <Grid
-                                    Grid.Row="0"
+                                    Grid.Row="1"
                                     Grid.Column="0"
-                                    Margin="0,10,0,0">
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,0,0,0">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="3*" />
+                                        <ColumnDefinition Width="8*" />
+                                        <ColumnDefinition Width="10" />
                                         <ColumnDefinition Width="1*" />
                                     </Grid.ColumnDefinitions>
                                     <TextBox
-                                        Grid.Column="0"
                                         Margin="5,0,0,0"
                                         Padding="3,5"
+                                        VerticalAlignment="Center"
                                         FontSize="20"
-                                        Text="{Binding KeyListFilter}">
+                                        IsEnabled="{Binding UnlockingUI}"
+                                        Text="{Binding FilterMultiCondition}">
                                         <TextBox.Style>
                                             <Style xmlns:sys="clr-namespace:System;assembly=mscorlib" TargetType="TextBox">
                                                 <Style.Resources>
@@ -187,7 +243,7 @@
                                                         AlignmentY="Center"
                                                         Stretch="None">
                                                         <VisualBrush.Visual>
-                                                            <Label Content="Filter Name Field" Foreground="DarkGray" />
+                                                            <Label Content="Filter Name Data by items field and value, ex : emp_no=006752, hashkey&gt;48861" Foreground="DarkGray" />
                                                         </VisualBrush.Visual>
                                                     </VisualBrush>
                                                 </Style.Resources>
@@ -206,20 +262,26 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <Button
-                                        Grid.Column="1"
+                                        Grid.Column="2"
                                         Margin="0,0,10,0"
-                                        Content="Reload" />
+                                        Command="{Binding FilterCommand}"
+                                        Content="Filter"
+                                        IsEnabled="{Binding UnlockingUI}" />
                                 </Grid>
                                 <DataGrid
-                                    Grid.Row="1"
+                                    Grid.Row="2"
                                     Grid.Column="0"
                                     Margin="5,10,0,5"
+                                    dgx:DataGridFilter.IsAutoFilterEnabled="True"
+                                    dgx:DataGridFilter.StartFilteringKeyGesture="Ctrl+F"
                                     AutoGenerateColumns="False"
                                     CanUserAddRows="False"
-                                    ItemsSource="{Binding KeyList}"
+                                    IsEnabled="{Binding UnlockingUI}"
+                                    IsReadOnly="True"
+                                    ItemsSource="{Binding KeyList, Mode=OneWay}"
                                     SelectedItem="{Binding SelectedKey}">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Width="80">
                                             <DataGridTemplateColumn.Header>
                                                 <TextBlock Text="Type" />
                                             </DataGridTemplateColumn.Header>
@@ -236,11 +298,14 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn Binding="{Binding Name}" Header="Name" />
+                                        <DataGridTextColumn
+                                            Width="100"
+                                            Binding="{Binding Name}"
+                                            Header="Name" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <GridSplitter
-                                    Grid.Row="1"
+                                    Grid.Row="2"
                                     Grid.RowSpan="2"
                                     Grid.Column="0"
                                     Width="3"
@@ -248,52 +313,43 @@
                                     VerticalAlignment="Stretch"
                                     Background="DarkGray" />
                                 <Grid
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    Margin="0,10,0,0">
-                                    <TextBox
-                                        Margin="5,0,0,0"
-                                        Padding="3,5"
-                                        VerticalAlignment="Center"
-                                        FontSize="20"
-                                        Text="{Binding FilterMultiCondition}">
-                                        <TextBox.Style>
-                                            <Style xmlns:sys="clr-namespace:System;assembly=mscorlib" TargetType="TextBox">
-                                                <Style.Resources>
-                                                    <VisualBrush
-                                                        x:Key="CueBannerBrush"
-                                                        AlignmentX="Left"
-                                                        AlignmentY="Center"
-                                                        Stretch="None">
-                                                        <VisualBrush.Visual>
-                                                            <Label Content="Filter Name Data by items field and value, ex: emp_no:006752, hashkey:48861" Foreground="DarkGray" />
-                                                        </VisualBrush.Visual>
-                                                    </VisualBrush>
-                                                </Style.Resources>
-                                                <Style.Triggers>
-                                                    <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
-                                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                                    </Trigger>
-                                                    <Trigger Property="Text" Value="{x:Null}">
-                                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                                    </Trigger>
-                                                    <Trigger Property="IsKeyboardFocused" Value="True">
-                                                        <Setter Property="Background" Value="White" />
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBox.Style>
-                                    </TextBox>
-                                </Grid>
-                                <DataGrid
                                     Grid.Row="1"
                                     Grid.Column="1"
+                                    Margin="0,10,0,0" />
+                                <DataGrid
+                                    Grid.Row="2"
+                                    Grid.Column="1"
                                     Margin="5,10,5,5"
-                                    ItemsSource="{Binding DetaiDataList}" />
-                                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    dgx:DataGridFilter.IsAutoFilterEnabled="True"
+                                    dgx:DataGridFilter.StartFilteringKeyGesture="Ctrl+F"
+                                    AutoGenerateColumns="False"
+                                    IsEnabled="{Binding UnlockingUI}"
+                                    ItemsSource="{Binding DetailDataList, Mode=OneWay}"
+                                    SelectedItem="{Binding DetailData}">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Key">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Item1}">
+                                                        <TextBlock.InputBindings>
+                                                            <MouseBinding Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.ChooseItem1StringCommand}" MouseAction="LeftDoubleClick" />
+                                                        </TextBlock.InputBindings>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn
+                                            Binding="{Binding Item2}"
+                                            Header="Value"
+                                            IsReadOnly="True" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Grid.Row="3" Orientation="Horizontal">
                                     <TextBlock VerticalAlignment="Center" Text="DB" />
                                     <ComboBox
                                         Margin="10,0,0,0"
+                                        IsEnabled="{Binding UnlockingUI}"
                                         ItemsSource="{Binding ComboboxList}"
                                         SelectedItem="{Binding DBIndex}" />
                                     <TextBlock
