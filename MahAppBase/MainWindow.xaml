@@ -288,13 +288,39 @@
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock
-                                                        Padding="5,3"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"
-                                                        Background="BlueViolet"
                                                         FontWeight="Bold"
                                                         Foreground="White"
-                                                        Text="{Binding Type}" />
+                                                        Text="{Binding Type}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Type}" Value="Hash">
+                                                                        <DataTrigger.Setters>
+                                                                            <Setter Property="Background" Value="BlueViolet" />
+                                                                            <Setter Property="Foreground" Value="White" />
+                                                                            <Setter Property="Padding" Value="5,3" />
+                                                                        </DataTrigger.Setters>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Type}" Value="List">
+                                                                        <DataTrigger.Setters>
+                                                                            <Setter Property="Background" Value="SaddleBrown" />
+                                                                            <Setter Property="Foreground" Value="White" />
+                                                                            <Setter Property="Padding" Value="12,3" />
+                                                                        </DataTrigger.Setters>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Type}" Value="String">
+                                                                        <DataTrigger.Setters>
+                                                                            <Setter Property="Background" Value="Blue" />
+                                                                            <Setter Property="Foreground" Value="White" />
+                                                                            <Setter Property="Padding" Value="4,3" />
+                                                                        </DataTrigger.Setters>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>

@@ -482,16 +482,44 @@ namespace MahAppBase.ViewModel
         {
             var redis = ConnectionMultiplexer.Connect($"{Host}:{Port},password={Password}");
             var db = redis.GetDatabase(DBIndex);
-            HashEntry[] hashEntries = db.HashGetAll(SelectedKey.Name);
-            DetailDataList.Clear();
-
-            foreach (var item in hashEntries)
+            switch (SelectedKey.Type)
             {
-                DetailDataList.Add(new Tuple<string, object>(item.Name.ToString(), item.Value.ToString()));
-            }
+                case "Hash":
+                    HashEntry[] hashEntries = db.HashGetAll(SelectedKey.Name);
+                    DetailDataList.Clear();
 
-            redis.Close();
-            redis.Dispose();
+                    foreach (var item in hashEntries)
+                        DetailDataList.Add(new Tuple<string, object>(item.Name.ToString(), item.Value.ToString()));
+
+                    redis.Close();
+                    redis.Dispose();
+                    break;
+                case "String":
+                    string value = db.StringGet(SelectedKey.Name);
+                    DetailDataList.Add(new Tuple<string, object>("Data", value));
+                    break;
+                case "List":
+                    var listItems = db.ListRange(SelectedKey.Name);
+                    int index = 0;
+                    foreach (var item in listItems)
+                    {
+                        DetailDataList.Add(new Tuple<string, object>(index.ToString(), item.ToString()));
+                        index++;
+                    }
+                    break;
+                case "Set":
+                    Common.Notify("Type Set not implement yet", type: NotificationType.Warning);
+                    break;
+                case "SortedSet":
+                    Common.Notify("Type SortedSet not implement yet", type: NotificationType.Warning);
+                    break;
+                case "Stream":
+                    Common.Notify("Type Stream not implement yet", type: NotificationType.Warning);
+                    break;
+                case "None":
+                    Common.Notify("Type None not implement yet", type: NotificationType.Warning);
+                    break;
+            }
         }
 
         /// <summary>
@@ -505,7 +533,11 @@ namespace MahAppBase.ViewModel
             {
                 ComboboxList.Add(i);
             }
-            DBIndex = SelectedConnection.DefaultDB;
+
+            if (SelectedConnection is null)
+                DBIndex = 0;
+            else
+                DBIndex = SelectedConnection.DefaultDB;
 
         }
 
@@ -513,17 +545,44 @@ namespace MahAppBase.ViewModel
         /// 
         /// </summary>
         [HandleException]
-        public virtual void GetKeyList()
+        public void GetKeyList()
         {
             if (KeyList.Any())
+            {
                 KeyList.Clear();
+                DetailDataList.Clear();
+            }
+
 
             var result = Server.Keys(DBIndex, pattern: "*", pageSize: 100);
+            var dt = Server.Keys();
+            var found = dt.Where(x => int.Parse(x.ToString().Split(':')[0]) == DBIndex);
+            if (found != null && found.Any())
+            {
+                var dbRemark = found.First(x => int.Parse(x.ToString().Split(':')[0]) == DBIndex);
+                ConnectionInfo = $"{Host}:{Port} ({DBIndex}) － {dbRemark.ToString().Split(':')[1]}";
+            }
+            else
+                ConnectionInfo = $"{Host}:{Port} ({DBIndex}) － ???????";
+
+            RedisType type;
+            string keyTypeString = "";
+
+            if (result.Any())
+            {
+                var redis = ConnectionMultiplexer.Connect($"{Host}:{Port},password={Password}");
+                var db = redis.GetDatabase(DBIndex);
+                type = db.KeyType(result.First());
+                keyTypeString = type.ToString();
+                redis.Close();
+            }
+
+
             foreach (var key in result)
             {
-                KeyList.Add(new MahAppBase.KeyListData()
+                KeyList.Add(new KeyListData()
                 {
-                    Type = "HASH",
+                    Type = keyTypeString,
                     Name = key
                 });
             }
