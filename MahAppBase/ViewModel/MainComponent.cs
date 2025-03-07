@@ -482,12 +482,11 @@ namespace MahAppBase.ViewModel
         {
             var redis = ConnectionMultiplexer.Connect($"{Host}:{Port},password={Password}");
             var db = redis.GetDatabase(DBIndex);
+            DetailDataList.Clear();
             switch (SelectedKey.Type)
             {
                 case "Hash":
                     HashEntry[] hashEntries = db.HashGetAll(SelectedKey.Name);
-                    DetailDataList.Clear();
-
                     foreach (var item in hashEntries)
                         DetailDataList.Add(new Tuple<string, object>(item.Name.ToString(), item.Value.ToString()));
 
@@ -553,17 +552,9 @@ namespace MahAppBase.ViewModel
                 DetailDataList.Clear();
             }
 
-
+            ConnectionInfo = $"{Host}:{Port} ({DBIndex})";
             var result = Server.Keys(DBIndex, pattern: "*", pageSize: 100);
-            var dt = Server.Keys();
-            var found = dt.Where(x => int.Parse(x.ToString().Split(':')[0]) == DBIndex);
-            if (found != null && found.Any())
-            {
-                var dbRemark = found.First(x => int.Parse(x.ToString().Split(':')[0]) == DBIndex);
-                ConnectionInfo = $"{Host}:{Port} ({DBIndex}) － {dbRemark.ToString().Split(':')[1]}";
-            }
-            else
-                ConnectionInfo = $"{Host}:{Port} ({DBIndex}) － ???????";
+            ConnectionInfo = $"{Host}:{Port} ({DBIndex})";
 
             RedisType type;
             string keyTypeString = "";
